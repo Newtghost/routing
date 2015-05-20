@@ -21,12 +21,14 @@ public class App {
 			System.exit(-1);
 		}
 	
-        ConnectionsList connections = new ConnectionsList (args[0]);
+        Builder builder = new Builder (args[0]);
         
-        LOG.info("List created succesfully with " + connections.getList().size() + " connections.");
+        LOG.info("List created succesfully with " + builder.getConnections().size() + " connections.");
+        LOG.info("List created succesfully with " + builder.getFootpaths().size() + " footpaths.");
         
-        Router router = new Router(connections, "4818", 0, "1299") ; // 0 means earliest is the best
+        // TODO : trouver un moyen de stocker tout ça et le recharger pour ne pas le recomputer à chaque fois
         
+        Router router = new Router(builder, "4818", 0, "1299") ; // 0 means earliest is the best        
         router.run_CSA();
     }
     
