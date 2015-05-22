@@ -6,13 +6,15 @@ public class StopPoint {
 	
 	private Stop s ;
 	private int minimum_connection_time ;
-	
+
+	private Segment c ;	
 	private int arrival_time ;
 	
 	public StopPoint (Stop s, int minimum_connection_time) {
 		this.s = s ;
 		this.minimum_connection_time = minimum_connection_time ;
 		this.arrival_time = -1 ;
+		this.c = null ;
 	}
 	
 	public Stop getStop () {
@@ -26,9 +28,15 @@ public class StopPoint {
 	public int getArrivalTime () {
 		return arrival_time ;
 	}
+
+	public Segment getConnection () {
+		return c ;
+	}
 	
-	public void setArrivalTime (int time) {
+	public void setArrivalTime (int time, Segment c) {
+		if (time > arrival_time) return ;
 		arrival_time = time ;
+		this.c = c ;
 	}
 	
 }

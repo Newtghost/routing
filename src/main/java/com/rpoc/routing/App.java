@@ -23,10 +23,10 @@ public class App {
 	
         Builder builder = new Builder (args[0]);
         
-        LOG.info("List created succesfully with " + builder.getConnections().size() + " connections.");
+        LOG.info("List created succesfully with " + builder.getSortedConnections().size() + " connections.");
         LOG.info("List created succesfully with " + builder.getFootpaths().size() + " footpaths.");
         
-        // TODO : trouver un moyen de stocker tout ça et le recharger pour ne pas le recomputer à chaque fois
+        // TODO : sauver le builder dans un fichier (sérializer) pour n'avoir qu'à le recharger et ne pas tout refaire à chaque fois
         
         Router router = new Router(builder, "4818", 0, "1299") ; // 0 means earliest is the best        
         router.run_CSA();

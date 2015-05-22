@@ -6,6 +6,10 @@ public class Journey {
 
 	private ArrayList<Segment> path ;
 
+	public Journey () {
+		path = new ArrayList<Segment>() ;
+	}
+	
 	public void addSegment (Segment s) {
 		path.add(s) ;
 	}

@@ -13,9 +13,13 @@ import org.onebusaway.gtfs.model.Stop;
 import org.onebusaway.gtfs.model.StopTime;
 import org.onebusaway.gtfs.serialization.GtfsReader;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
+
 public class Builder {
 	
-	private Map <String, Connection> connections ; // TODO : pas possible d'avoir une map ici car clefs pas uniques... ensemble ???
+	private Multimap <String, Connection> connections ; 
+	private ArrayList<Connection> sorted_connections ; 
 	private Map <String, ArrayList<Footpath>> footpaths ;
 	private Map <String, StopPoint> stops ;
 	
@@ -32,8 +36,8 @@ public class Builder {
 	
 		reader.run();
 	
-		// Create the list of connections
-		connections = new HashMap<String, Connection> () ;
+		// Create the lists of connections
+		connections = ArrayListMultimap.create () ;
 		
 		// Get and sort the list of stop times to make easier the creation of all connections
 		ArrayList<StopTime> stop_times = new ArrayList<StopTime> (store.getAllStopTimes()) ;
@@ -66,8 +70,13 @@ public class Builder {
 			previous_st = st ;
 		}
 		
-		// TODO : ne pas oublier de trier la liste des connections ?
-		
+		// Création d'une liste des mêmes connections mais triée
+		sorted_connections = new ArrayList<Connection>() ;
+		for (String k : connections.keySet()) {
+			sorted_connections.addAll(connections.get(k)) ;
+		}
+		Collections.sort(sorted_connections);
+
 		// Create footpaths and stops lists
 		footpaths = new HashMap<String, ArrayList<Footpath>> () ;
 		stops = new HashMap<String, StopPoint> () ;
@@ -86,10 +95,16 @@ public class Builder {
 		
 	}
 	
-	Map<String, Connection> getConnections() {
-		return connections ;
+	/* Renvoie la liste des connections triée : plus simple pour le déroulement de l'algo */
+	ArrayList<Connection> getSortedConnections() {
+		return sorted_connections ;
 	}
 
+	/* Renvoie la table de hâchage : plus simple pour mettre à jour les connections */
+	Multimap <String, Connection> getConnections() {
+		return connections ;
+	}
+	
 	Map<String, ArrayList<Footpath>> getFootpaths() {
 		return footpaths ;
 	}
