@@ -42,6 +42,7 @@ public abstract class Segment {
 	}
 	
 	public static boolean isConnectionPossible (Stop s1, Stop s2) {
+		if (s1.getId().getId().equals(s2.getId().getId())) return false ;
 		double dist = gps2m(s1.getLat(), s1.getLon(), s2.getLat(), s2.getLon()) ;
 		return dist < CONNECTION_THRESHOLD ;
 	}

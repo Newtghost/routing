@@ -38,57 +38,85 @@ public class Router {
 	
 	public void run_CSA () {
 
-		for (Footpath f : footpaths.get(departure_id)) {
-			for (Connection c : connections.get(f.getArrivalId())) {
-				c.setReachable() ;
-			}
-		}
+		/* Initialization */
+		updateAccessibleConnections (departure_id, start_time) ;
+		stops.get(departure_id).setArrivalTime(start_time, null);
 
+		/* Core of the algorithm */
 		for (Connection c : sorted_connections) {
 
-			if (c.getDepartureTime() < start_time) continue ;
 			if (! c.isReachable()) continue ;
+			
+			/* 
+			 * Consistence des temps :
+			 * On ne peut pas prendre une connection si on n'est pas à temps au départ
+			 */
+			if (c.getDepartureTime() < stops.get(c.departure.getId().getId()).getArrivalTime()) continue ;
 
 			LOG.info("Connection reachable found");
 			
 			if (c.getArrivalId().equals(arrival_id)) {
-				buildJourney (c) ; /* TODO : ca fonctionne pas il faut reconstruire le journey */ 
 				LOG.info("Solution found !!");
-				
-				/* Print solution */
-				for (Segment s : solution.getPath()) {
-					System.out.println(s);
-				}
-				
+				buildJourney (c) ;
+				printJourney () ;				
 				break ;
 			}
 
-			// Update the list of Stops
-			stops.get(c.getArrivalId()).setArrivalTime(c.getArrivalTime(), c);
+			// Update the list of stops
+			if (! stops.get(c.getArrivalId()).setArrivalTime(c.getArrivalTime(), c)) continue;
 			LOG.info("Updating the list of stops done successfully.");
 			
-			// Update the list of Connection
-			c.spreadReachability() ; // Same trip
-
-			// Update connection which start from nearby stops
-			for (Footpath f : footpaths.get(c.getArrivalId())) {
-				for (Connection cx : connections.get(f.getArrivalId())) {
-					cx.setReachable() ;
-				}
-				stops.get(f.getArrivalId()).setArrivalTime((int) (f.distance/SPEED), f) ; 
-			}
+			// Update the list of connections
+			updateAccessibleConnections(c.getArrivalId(), c.getArrivalTime()) ; /* connections which start from the stop and the nearby stops */
+			c.spreadReachability() ; /* connections which are on the same trip */
 			LOG.info("Updating the list of connection done successfully.");
 		}
 		
 	}
 
+	private void updateAccessibleConnections(String id, int time) {
+		for (Connection cx : connections.get(id)) { /* Les connections accessibles depuis le stop id */
+			cx.setReachable() ;
+		}
+		for (Footpath f : footpaths.get(id)) { /* Les stops accessibles depuis le stop id */
+			for (Connection cx : connections.get(f.getArrivalId())) { /* Les connections accessibles depuis ces stops */
+				cx.setReachable() ;
+			}
+			stops.get(f.getArrivalId()).setArrivalTime((int) (f.distance/SPEED) + time, f) ; 
+		}
+	}
+
 	private void buildJourney(Segment c) {
-		StopPoint dep = stops.get(c.getDeparture()) ;
-		if (dep == null) return ;
-		solution.addSegment(c);
-		if (dep.getConnection() == null) return ; /* On est revenu au départ */
-		if (dep.getStop().getId().getId().equals(departure_id)) return ; /* On est revenu au départ */
-		buildJourney(dep.getConnection());
+		StopPoint dep ;
+		Segment aux = c;
+		while (true) {
+			solution.addSegment(aux); /* On rajoute le segment dans la solution */
+			dep = stops.get(aux.getDepartureId()) ;
+			if (dep.marked) { 
+				LOG.error("There is a loop in the journey");
+				break ;
+			}
+			dep.marked = true ;
+			if (dep.getConnection() == null) break ; /* On est revenu au départ */
+			aux = dep.getConnection() ;
+		}		
+	}
+
+	private void printJourney() {
+		
+		Connection c_prev = null ;
+		for (Segment s : solution.getPath()) {
+			if (s instanceof Footpath) {
+				System.out.println("Footpath : " + s.getDepartureId() + " --> " + s.getArrivalId());
+			} else {
+				Connection c = (Connection) s ;
+				if (c_prev == null || ! c.getTripId().equals(c_prev.getTripId())) {
+					System.out.println("Transit : " + c.getRouteId() + ", " + c.getTripId());
+				}
+				System.out.println("\t" + c.getDepartureId() + " (" + c.getDepartureTime() + "), " + c.getArrivalId() + " (" + c.getArrivalTime() + ")");
+				c_prev = c ;
+			}
+		}		
 	}
 
 }

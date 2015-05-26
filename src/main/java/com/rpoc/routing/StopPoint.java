@@ -9,6 +9,7 @@ public class StopPoint {
 
 	private Segment c ;	
 	private int arrival_time ;
+	public boolean marked = false ;
 	
 	public StopPoint (Stop s, int minimum_connection_time) {
 		this.s = s ;
@@ -33,10 +34,13 @@ public class StopPoint {
 		return c ;
 	}
 	
-	public void setArrivalTime (int time, Segment c) {
-		if (time > arrival_time) return ;
+	public boolean setArrivalTime (int time, Segment c) {
+		if (arrival_time > 0 && time > arrival_time) {
+			return false ;
+		}
 		arrival_time = time ;
 		this.c = c ;
+		return true ;
 	}
 	
 }
