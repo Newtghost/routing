@@ -1,25 +1,30 @@
 package com.rpoc.routing;
 
-import org.onebusaway.gtfs.model.Stop;
+import java.io.Serializable;
 
-public class StopPoint {
+public class StopPoint implements Serializable {
 	
-	private Stop s ;
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	
+	private String stop_id ;
 	private int minimum_connection_time ;
 
 	private Segment c ;	
 	private int arrival_time ;
 	public boolean marked = false ;
 	
-	public StopPoint (Stop s, int minimum_connection_time) {
-		this.s = s ;
+	public StopPoint (String stop_id, int minimum_connection_time) {
+		this.stop_id = stop_id ;
 		this.minimum_connection_time = minimum_connection_time ;
 		this.arrival_time = -1 ;
 		this.c = null ;
 	}
 	
-	public Stop getStop () {
-		return s ;
+	public String getStopId () {
+		return stop_id ;
 	}
 	
 	public int getMinimumConnectionTime () {

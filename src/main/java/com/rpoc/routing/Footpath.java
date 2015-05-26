@@ -4,6 +4,11 @@ import org.onebusaway.gtfs.model.Stop;
 
 public class Footpath extends Segment {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	
 	public double distance ;
 
 	public Footpath (Stop s1, Stop s2) {

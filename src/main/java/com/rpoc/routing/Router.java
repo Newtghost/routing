@@ -12,11 +12,7 @@ public class Router {
 	
     private static final Logger LOG = LoggerFactory.getLogger(Router.class);
 
-	private static final double SPEED = 1; /* TODO : important à bouger autre part, dépend de l'utilisateur */
-    
-	private String departure_id ;
-	private String arrival_id ;
-	private int start_time ;
+	private Request request ;
 	
 	private Multimap <String, Connection> connections ; 
 	private ArrayList<Connection> sorted_connections ; 
@@ -25,10 +21,8 @@ public class Router {
 	
 	private Journey solution ;
 	
-	public Router (Builder builder, String start_id, int start_time, String stop_id) {
-		this.departure_id = start_id ;
-		this.arrival_id = stop_id ;
-		this.start_time = start_time ;		
+	public Router (Builder builder, Request request) {
+		this.request = request ;	
 		connections = builder.getConnections() ;
 		sorted_connections = builder.getSortedConnections() ;
 		footpaths = builder.getFootpaths() ;
@@ -38,9 +32,11 @@ public class Router {
 	
 	public void run_CSA () {
 
+		LOG.info("Start computing solutions.");
+
 		/* Initialization */
-		updateAccessibleConnections (departure_id, start_time) ;
-		stops.get(departure_id).setArrivalTime(start_time, null);
+		updateAccessibleConnections (request.getDepartureId(), request.getStartTime()) ;
+		stops.get(request.getDepartureId()).setArrivalTime(request.getStartTime(), null);
 
 		/* Core of the algorithm */
 		for (Connection c : sorted_connections) {
@@ -53,10 +49,10 @@ public class Router {
 			 */
 			if (c.getDepartureTime() < stops.get(c.departure.getId().getId()).getArrivalTime()) continue ;
 
-			LOG.info("Connection reachable found");
+			// LOG.info("Connection reachable found");
 			
-			if (c.getArrivalId().equals(arrival_id)) {
-				LOG.info("Solution found !!");
+			if (c.getArrivalId().equals(request.getArrivalId())) {
+				LOG.info("Solution found.");
 				buildJourney (c) ;
 				printJourney () ;				
 				break ;
@@ -64,12 +60,12 @@ public class Router {
 
 			// Update the list of stops
 			if (! stops.get(c.getArrivalId()).setArrivalTime(c.getArrivalTime(), c)) continue;
-			LOG.info("Updating the list of stops done successfully.");
+			// LOG.info("Updating the list of stops done successfully.");
 			
 			// Update the list of connections
 			updateAccessibleConnections(c.getArrivalId(), c.getArrivalTime()) ; /* connections which start from the stop and the nearby stops */
 			c.spreadReachability() ; /* connections which are on the same trip */
-			LOG.info("Updating the list of connection done successfully.");
+			// LOG.info("Updating the list of connection done successfully.");
 		}
 		
 	}
@@ -82,7 +78,7 @@ public class Router {
 			for (Connection cx : connections.get(f.getArrivalId())) { /* Les connections accessibles depuis ces stops */
 				cx.setReachable() ;
 			}
-			stops.get(f.getArrivalId()).setArrivalTime((int) (f.distance/SPEED) + time, f) ; 
+			stops.get(f.getArrivalId()).setArrivalTime((int) (f.distance/request.getSpeed()) + time, f) ; 
 		}
 	}
 
@@ -103,7 +99,6 @@ public class Router {
 	}
 
 	private void printJourney() {
-		
 		Connection c_prev = null ;
 		for (Segment s : solution.getPath()) {
 			if (s instanceof Footpath) {

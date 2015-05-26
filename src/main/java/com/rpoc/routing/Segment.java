@@ -1,8 +1,15 @@
 package com.rpoc.routing;
 
+import java.io.Serializable;
+
 import org.onebusaway.gtfs.model.Stop;
 
-public abstract class Segment {
+public abstract class Segment  implements Serializable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 
 	private static final double CONNECTION_THRESHOLD = 500; // in meters
 

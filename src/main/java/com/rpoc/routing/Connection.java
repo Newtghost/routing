@@ -4,6 +4,11 @@ import org.onebusaway.gtfs.model.StopTime;
 
 public class Connection extends Segment implements Comparable<Connection> {
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	
 	private int departure_time ;
 	private int arrival_time ;
 
