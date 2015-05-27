@@ -4,6 +4,8 @@ import java.io.IOException;
 
 public class App {
 	
+    public static final boolean DEBUG = false ;
+
     public static void main( String[] args ) throws IOException {
         System.out.println( "My first app creating a list of connections -- start" );
         

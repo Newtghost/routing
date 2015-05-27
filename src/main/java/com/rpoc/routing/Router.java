@@ -1,5 +1,7 @@
 package com.rpoc.routing;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Map;
 
@@ -7,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Multimap;
+import com.google.gson.Gson;
 
 public class Router {
 	
@@ -49,23 +52,27 @@ public class Router {
 			 */
 			if (c.getDepartureTime() < stops.get(c.departure.getId().getId()).getArrivalTime()) continue ;
 
-			// LOG.info("Connection reachable found");
+			if (App.DEBUG) LOG.info("Connection reachable found");
 			
 			if (c.getArrivalId().equals(request.getArrivalId())) {
 				LOG.info("Solution found.");
 				buildJourney (c) ;
-				printJourney () ;				
+				try {
+					journey2Json () ;
+				} catch (IOException e) {
+					e.printStackTrace();
+				}				
 				break ;
 			}
 
 			// Update the list of stops
 			if (! stops.get(c.getArrivalId()).setArrivalTime(c.getArrivalTime(), c)) continue;
-			// LOG.info("Updating the list of stops done successfully.");
+			if (App.DEBUG) LOG.info("Updating the list of stops done successfully.");
 			
 			// Update the list of connections
 			updateAccessibleConnections(c.getArrivalId(), c.getArrivalTime()) ; /* connections which start from the stop and the nearby stops */
 			c.spreadReachability() ; /* connections which are on the same trip */
-			// LOG.info("Updating the list of connection done successfully.");
+			if (App.DEBUG) LOG.info("Updating the list of connection done successfully.");
 		}
 		
 	}
@@ -96,6 +103,16 @@ public class Router {
 			if (dep.getConnection() == null) break ; /* On est revenu au départ */
 			aux = dep.getConnection() ;
 		}		
+	}
+
+	private void journey2Json() throws IOException {
+		if (!App.DEBUG) printJourney() ;
+    	Gson gson = new Gson();
+    	String json = gson.toJson(solution.toString());
+		FileWriter writer = new FileWriter("Plan.json");
+		writer.write(json);
+		writer.close();
+        LOG.info("Json created successfully !");            
 	}
 
 	private void printJourney() {

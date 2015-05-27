@@ -82,7 +82,7 @@ public class Builder {
 			previous_st = st ;
 		}
 		
-        LOG.info("List of connections created succesfully.");
+        LOG.info("List of connections created successfully.");
 
         if (REBUILD) {
 			
@@ -103,8 +103,8 @@ public class Builder {
 				stops.put(s1.getId().getId(), new StopPoint(s1.getId().getId(), 0));
 			}
 
-			LOG.info("List of footpaths created succesfully.");
-	        LOG.info("List of stops created succesfully.");
+			LOG.info("List of footpaths created successfully.");
+	        LOG.info("List of stops created successfully.");
 
 			try {
 				
@@ -121,7 +121,7 @@ public class Builder {
 				ioe.printStackTrace();
 			}
 
-	        LOG.info("All lists saved succesfully.");
+	        LOG.info("All lists saved successfully.");
 
 		} else {
 			try {
@@ -133,11 +133,11 @@ public class Builder {
 
 				/* Read footpaths */
 				footpaths = (HashMap<String, ArrayList<Footpath>>) ois.readObject();
-		        LOG.info("List of footpaths loaded succesfully.");
+		        LOG.info("List of footpaths loaded successfully.");
 
 				/* Read stops */
 				stops = (HashMap<String, StopPoint>) ois.readObject();
-		        LOG.info("List of stops loaded succesfully.");
+		        LOG.info("List of stops loaded successfully.");
 
 		        ois.close();
 				fis.close();

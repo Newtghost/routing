@@ -41,11 +41,19 @@
     </dependency>
     <!-- End GTFS -->
 
+    <!-- Google multimap -->
 	<dependency>
 		<groupId>com.google.collections</groupId>
 		<artifactId>google-collections</artifactId>
 		<version>1.0-rc2</version>
 	</dependency>
+
+    <!-- Json generation -->
+    <dependency>
+    	<groupId>com.google.code.gson</groupId>
+    	<artifactId>gson</artifactId>
+    	<version>1.7.1</version>
+    </dependency>
 
     <!-- Read GTFS-RT -->
     <!-- End GTFS-RT -->
