@@ -14,7 +14,9 @@ public abstract class Segment  implements Serializable {
 	private static final double CONNECTION_THRESHOLD = 500; // in meters
 
 	public Stop arrival ;
+	public int arrival_time ;
 	public Stop departure ;
+	public int departure_time ;
 	
 	Stop getArrival () {
 		return arrival ;

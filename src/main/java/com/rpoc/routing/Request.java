@@ -2,7 +2,7 @@ package com.rpoc.routing;
 
 public class Request {
 	
-	private double speed = 0.5; /* 0.5 meter per second */
+	public static final double SPEED = 0.3; /* 0.5 meter per second */
 	
 	private String departure_id ;
 	private String arrival_id ;
@@ -26,7 +26,4 @@ public class Request {
 		return start_time ;
 	}
 	
-	public double getSpeed () {
-		return speed ;
-	}
 }

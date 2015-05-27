@@ -36,48 +36,49 @@ public class Router {
 	public void run_CSA () {
 
 		LOG.info("Start computing solutions.");
+		
+		int best_time = -1 ; /* Best time found to go from the source to the target */
 
 		/* Initialization */
-		updateAccessibleConnections (request.getDepartureId(), request.getStartTime()) ;
-		stops.get(request.getDepartureId()).setArrivalTime(request.getStartTime(), null);
+		updateAccessibleConnections (request.getDepartureId(), request.getStartTime(), best_time) ;
+		stops.get(request.getDepartureId()).setArrivalTime(request.getStartTime());
 
 		/* Core of the algorithm */
 		for (Connection c : sorted_connections) {
 
+			/* A connection has to be reachable if we want to take it */
 			if (! c.isReachable()) continue ;
 			
-			/* 
-			 * Consistence des temps :
-			 * On ne peut pas prendre une connection si on n'est pas à temps au départ
-			 */
-			if (c.getDepartureTime() < stops.get(c.departure.getId().getId()).getArrivalTime()) continue ;
+			/* We can't take a connection if we'll not be on time at the departure */
+			if (c.getDepartureTime() < stops.get(c.departure.getId().getId()).getArrivalTime() + 
+					stops.get(c.departure.getId().getId()).getMinimumConnectionTime()) continue ;
 
 			if (App.DEBUG) LOG.info("Connection reachable found");
 			
+			// Update the list of stops since we take this connection
+			if (! stops.get(c.getArrivalId()).addPaths(stops.get(c.getDepartureId()), c, best_time)) {
+				/* Useless connection */
+				continue;
+			} else {
+				if (App.DEBUG) LOG.info("Updating the list of stops done successfully.");
+			}
+			
 			if (c.getArrivalId().equals(request.getArrivalId())) {
 				LOG.info("Solution found.");
-				buildJourney (c) ;
-				try {
-					journey2Json () ;
-				} catch (IOException e) {
-					e.printStackTrace();
-				}				
-				break ;
+				best_time = stops.get(c.getArrivalId()).getArrivalTime() ; /* Usefull for an optimization */
 			}
-
-			// Update the list of stops
-			if (! stops.get(c.getArrivalId()).setArrivalTime(c.getArrivalTime(), c)) continue;
-			if (App.DEBUG) LOG.info("Updating the list of stops done successfully.");
 			
-			// Update the list of connections
-			updateAccessibleConnections(c.getArrivalId(), c.getArrivalTime()) ; /* connections which start from the stop and the nearby stops */
+			// Update the list of connections : which connections became reachable
+			updateAccessibleConnections(c.getArrivalId(), c.getArrivalTime(), best_time) ; /* connections which start from the stop and the nearby stops */
 			c.spreadReachability() ; /* connections which are on the same trip */
 			if (App.DEBUG) LOG.info("Updating the list of connection done successfully.");
 		}
+
+		buildJourney () ;
 		
 	}
 
-	private void updateAccessibleConnections(String id, int time) {
+	private void updateAccessibleConnections(String id, int time, int best_time) {
 		for (Connection cx : connections.get(id)) { /* Les connections accessibles depuis le stop id */
 			cx.setReachable() ;
 		}
@@ -85,24 +86,26 @@ public class Router {
 			for (Connection cx : connections.get(f.getArrivalId())) { /* Les connections accessibles depuis ces stops */
 				cx.setReachable() ;
 			}
-			stops.get(f.getArrivalId()).setArrivalTime((int) (f.distance/request.getSpeed()) + time, f) ; 
+			stops.get(f.getArrivalId()).setArrivalTime(time + f.arrival_time); ; 
 		}
 	}
 
-	private void buildJourney(Segment c) {
-		StopPoint dep ;
-		Segment aux = c;
-		while (true) {
-			solution.addSegment(aux); /* On rajoute le segment dans la solution */
-			dep = stops.get(aux.getDepartureId()) ;
-			if (dep.marked) { 
-				LOG.error("There is a loop in the journey");
-				break ;
+	private void buildJourney() {
+
+		Map<Integer, ArrayList<Path>> paths = stops.get(request.getArrivalId()).getPaths() ;
+		
+		for (Integer i : paths.keySet()) {
+			for (Path p : paths.get(i)) {
+				System.out.println("Departure at " + i.intValue() + " ; travel time = " + p.getTravelTime() + " ; number of trips = " + p.getNbTrips()) ;
 			}
-			dep.marked = true ;
-			if (dep.getConnection() == null) break ; /* On est revenu au départ */
-			aux = dep.getConnection() ;
-		}		
+		}	
+
+		/* Export to a Json file */
+//		try {
+//			journey2Json () ;
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}				
 	}
 
 	private void journey2Json() throws IOException {
@@ -120,6 +123,7 @@ public class Router {
 		for (Segment s : solution.getPath()) {
 			if (s instanceof Footpath) {
 				System.out.println("Footpath : " + s.getDepartureId() + " --> " + s.getArrivalId());
+				c_prev = null ;
 			} else {
 				Connection c = (Connection) s ;
 				if (c_prev == null || ! c.getTripId().equals(c_prev.getTripId())) {
