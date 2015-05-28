@@ -5,11 +5,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Map;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.json.simple.JSONArray;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Multimap;
-import com.google.gson.Gson;
 
 public class Router {
 	
@@ -57,11 +59,6 @@ public class Router {
 			if (c.getArrivalId().equals(request.getArrivalId())) {
 				LOG.info("Solution found.");
 				buildJourney (c) ;
-				try {
-					journey2Json () ;
-				} catch (IOException e) {
-					e.printStackTrace();
-				}				
 				break ;
 			}
 
@@ -105,14 +102,98 @@ public class Router {
 		}		
 	}
 
-	private void journey2Json() throws IOException {
-		if (!App.DEBUG) printJourney() ;
-    	Gson gson = new Gson();
-    	String json = gson.toJson(solution.toString());
-		FileWriter writer = new FileWriter("Plan.json");
+	@SuppressWarnings("unchecked")
+	public String journey2Json() throws IOException, JSONException {
+		if (App.DEBUG) printJourney() ;
+
+		JSONObject obj = new JSONObject();
+		JSONObject plan = new JSONObject();
+		JSONArray itineraries = new JSONArray();
+		JSONObject itinerary = new JSONObject();
+		JSONArray legs = new JSONArray();
+		JSONObject leg = null;
+
+		Connection c_prev = null ;
+		for (Segment s : solution.getPath()) {
+			if (s instanceof Footpath) {
+
+				if (leg != null) {
+					/* Add the current leg corresponding to transit path */
+					JSONObject to = new JSONObject() ;
+					to.put("name", c_prev.getArrivalId()) ;
+					to.put("stopSequence", 0) ;
+					leg.put("to", to) ;
+					leg.put("endTime", c_prev.getArrivalTime()) ;
+					leg.put("arrivalDelay", 0) ;
+					leg.put("distance", 0) ;
+					legs.add(leg) ;
+				}
+
+				/* New leg corresponding to a footpath */
+				leg = new JSONObject() ;
+				JSONObject from = new JSONObject() ;
+				JSONObject to = new JSONObject() ;
+				from.put("name", s.getDepartureId()) ;
+				to.put("name", s.getArrivalId()) ;
+				leg.put("from", from) ;
+				leg.put("to", to) ;
+				leg.put("startTime", 0) ;
+				leg.put("endTime", 0) ;
+				leg.put("departureDelay", 0) ;
+				leg.put("arrivalDelay", 0) ;
+				leg.put("distance", ((Footpath) s).distance) ;
+				leg.put("mode", "WALK") ;
+				legs.add(leg);
+				leg = null ;
+
+			} else {
+				
+				Connection c = (Connection) s ;
+				
+				if (c_prev == null || ! c.getTripId().equals(c_prev.getTripId())) {
+					if (leg != null) {
+						/* Add the current leg corresponding to transit path before to create a new one */
+						JSONObject to = new JSONObject() ;
+						to.put("name", c_prev.getArrivalId()) ;
+						to.put("stopSequence", 0) ;
+						leg.put("to", to) ;
+						leg.put("endTime", c_prev.getArrivalTime()) ;
+						leg.put("arrivalDelay", 0) ;
+						leg.put("distance", 0) ;
+						legs.add(leg) ;
+					}
+					
+					/* Creation of a new transit path */
+					leg = new JSONObject() ;
+					JSONObject from = new JSONObject() ;
+					from.put("name", c.getDepartureId()) ;
+					from.put("stopSequence", 0) ;
+					leg.put("from", from) ;
+					leg.put("startTime", c.getDepartureTime()) ;
+					leg.put("departureDelay", 0) ;
+					leg.put("mode", "TRANSIT") ;
+					leg.put("routeId", c.getRouteId()) ;
+					leg.put("agencyId", "") ;
+					leg.put("tripId", c.getTripId()) ;
+
+				}
+				
+				c_prev = c ;
+			}
+		}
+		
+		itinerary.put("legs", legs) ;
+		itineraries.add(itinerary) ;
+		plan.put("itineraries", itineraries) ;
+		obj.put("plan", plan) ;
+		
+		String json = obj.toString();
+		FileWriter writer = new FileWriter("RFSPlan.json");
 		writer.write(json);
 		writer.close();
-        LOG.info("Json created successfully !");            
+        LOG.info("Json created successfully !");  
+        
+        return json ;
 	}
 
 	private void printJourney() {

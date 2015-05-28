@@ -1,5 +1,7 @@
 package com.rpoc.routing;
 
+import java.io.IOException;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -7,6 +9,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriInfo;
+
+import org.json.JSONException;
 
 @Path("myservice")
 public class MyService {
@@ -39,7 +43,11 @@ public class MyService {
 			Router router = new Router(builder, request) ;       
 			router.run_CSA();
 
-			return "Request treated successfully.";
+			try {
+				return router.journey2Json();
+			} catch (IOException | JSONException e) {
+				e.printStackTrace();
+			}
 		} 
 
 		return "RFS request error. Usage: from to start_time";
