@@ -12,6 +12,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.onebusaway.gtfs.impl.GtfsDaoImpl;
 import org.onebusaway.gtfs.model.Stop;
 import org.onebusaway.gtfs.model.StopTime;
@@ -179,4 +180,26 @@ public class Builder {
 		return stops ;
 	}
 
-}
+	public void reinit () {
+		for (StopPoint p : stops.values()) {
+			p.reinit () ;
+		}	
+	}
+
+	/**
+     * Return an HK2 Binder that injects this specific Builder instance into Jersey web resources.
+     * This should be registered in the ResourceConfig (Jersey). Jersey forces us to use injection 
+     * to get application context into HTTP method handlers.
+     * More on custom injection in Jersey 2:
+     * http://jersey.576304.n2.nabble.com/Custom-providers-in-Jersey-2-tp7580699p7580715.html
+     */
+     public AbstractBinder makeBinder() {
+        return new AbstractBinder() {
+            @Override
+            protected void configure() {
+                bind(Builder.this).to(Builder.class);
+            }
+        };
+    }
+
+ }

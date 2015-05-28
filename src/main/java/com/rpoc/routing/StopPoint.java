@@ -47,5 +47,11 @@ public class StopPoint implements Serializable {
 		this.c = c ;
 		return true ;
 	}
+
+	public void reinit() {
+		this.arrival_time = -1 ;
+		this.c = null ;
+		this.marked = false ;
+	}
 	
 }
