@@ -11,16 +11,14 @@ public class App {
     public static final boolean DEBUG = false ;
     
     // Builder
-    /* TODO : ce path pourrait être en paramètre de l'app */
-    public static final String GTFS_PATH = "C:\\Users\\david.leydier\\otp\\graphs\\gtfs";
 	Builder builder = null;
 
 	// Base URI the Grizzly HTTP server will listen on
     public static final String BASE_URI = "http://localhost:8079/myapp/";
 
-	public App () {
+	public App (String path) {
     	try {
-			builder = new Builder (GTFS_PATH);
+			builder = new Builder (path);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -42,7 +40,11 @@ public class App {
     }
 
     public static void main(String[] args) throws IOException {
-    	App myapp = new App () ;
+    	if (args.length != 1) {
+			System.err.println("usage: gtfs_feed_path");
+			System.exit(-1);
+		}	
+    	App myapp = new App (args[0]) ;
     	myapp.startServer();
     }
 

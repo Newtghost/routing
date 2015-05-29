@@ -13,23 +13,41 @@ public abstract class Segment  implements Serializable {
 
 	private static final double CONNECTION_THRESHOLD = 500; // in meters
 
-	public Stop arrival ;
-	public Stop departure ;
-	
-	Stop getArrival () {
+	protected Stop departure ;
+	protected long departure_time ;
+	protected Stop arrival ;
+	protected long arrival_time ;
+
+	public Stop getArrival () {
 		return arrival ;
 	}
 
-	Stop getDeparture () {
+	public Stop getDeparture () {
 		return departure ;
 	}
 
-	String getArrivalId () {
+	public String getArrivalId () {
 		return arrival.getId().getId() ;
 	}
 
-	String getDepartureId () {
+	public String getDepartureId () {
 		return departure.getId().getId() ;
+	}
+
+	public String getArrivalName () {
+		return arrival.getName() ;
+	}
+
+	public String getDepartureName () {
+		return departure.getName() ;
+	}
+
+	public long getArrivalTime () {
+		return arrival_time ;
+	}
+
+	public long getDepartureTime () {
+		return departure_time ;
 	}
 		
 	public static double gps2m (double lat_a, double lng_a, double lat_b, double lng_b) {

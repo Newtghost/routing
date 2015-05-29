@@ -1,8 +1,8 @@
 package com.rpoc.routing;
 
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Map;
 
 import org.json.JSONException;
@@ -74,15 +74,16 @@ public class Router {
 		
 	}
 
-	private void updateAccessibleConnections(String id, int time) {
+	private void updateAccessibleConnections(String id, long time) {
 		for (Connection cx : connections.get(id)) { /* Les connections accessibles depuis le stop id */
 			cx.setReachable() ;
 		}
 		for (Footpath f : footpaths.get(id)) { /* Les stops accessibles depuis le stop id */
+			f.update(null, time);
 			for (Connection cx : connections.get(f.getArrivalId())) { /* Les connections accessibles depuis ces stops */
 				cx.setReachable() ;
 			}
-			stops.get(f.getArrivalId()).setArrivalTime((int) (f.distance/request.getSpeed()) + time, f) ; 
+			stops.get(f.getArrivalId()).setArrivalTime(f.arrival_time, f) ; 
 		}
 	}
 
@@ -119,13 +120,13 @@ public class Router {
 
 				if (leg != null) {
 					/* Add the current leg corresponding to transit path */
-					JSONObject to = new JSONObject() ;
-					to.put("name", c_prev.getArrivalId()) ;
-					to.put("stopSequence", 0) ;
-					leg.put("to", to) ;
-					leg.put("endTime", c_prev.getArrivalTime()) ;
-					leg.put("arrivalDelay", 0) ;
-					leg.put("distance", 0) ;
+					JSONObject from = new JSONObject() ;
+					from.put("name", c_prev.getDepartureName()) ;
+					from.put("stopId", c_prev.getDepartureId()) ;
+					from.put("stopSequence", c_prev.getDepartureSequence()) ;
+					leg.put("from", from) ;
+					leg.put("startTime", c_prev.getDepartureTime()) ;
+					leg.put("departureDelay", c_prev.getDepartureDelay()) ;
 					legs.add(leg) ;
 				}
 
@@ -133,12 +134,14 @@ public class Router {
 				leg = new JSONObject() ;
 				JSONObject from = new JSONObject() ;
 				JSONObject to = new JSONObject() ;
-				from.put("name", s.getDepartureId()) ;
-				to.put("name", s.getArrivalId()) ;
+				from.put("name", s.getDepartureName()) ;
+				from.put("stopId", s.getDepartureId()) ;
+				to.put("name", s.getArrivalName()) ;
+				to.put("stopId", s.getArrivalId()) ;
 				leg.put("from", from) ;
 				leg.put("to", to) ;
-				leg.put("startTime", 0) ;
-				leg.put("endTime", 0) ;
+				leg.put("startTime", s.getDepartureTime()) ;
+				leg.put("endTime", s.getArrivalTime()) ;
 				leg.put("departureDelay", 0) ;
 				leg.put("arrivalDelay", 0) ;
 				leg.put("distance", ((Footpath) s).distance) ;
@@ -153,24 +156,26 @@ public class Router {
 				if (c_prev == null || ! c.getTripId().equals(c_prev.getTripId())) {
 					if (leg != null) {
 						/* Add the current leg corresponding to transit path before to create a new one */
-						JSONObject to = new JSONObject() ;
-						to.put("name", c_prev.getArrivalId()) ;
-						to.put("stopSequence", 0) ;
-						leg.put("to", to) ;
-						leg.put("endTime", c_prev.getArrivalTime()) ;
-						leg.put("arrivalDelay", 0) ;
-						leg.put("distance", 0) ;
+						JSONObject from = new JSONObject() ;
+						from.put("name", c_prev.getDepartureName()) ;
+						from.put("stopId", c_prev.getDepartureId()) ;
+						from.put("stopSequence", c_prev.getDepartureSequence()) ;
+						leg.put("from", from) ;
+						leg.put("startTime", c_prev.getDepartureTime()) ;
+						leg.put("departureDelay", c_prev.getDepartureDelay()) ;
 						legs.add(leg) ;
 					}
 					
 					/* Creation of a new transit path */
 					leg = new JSONObject() ;
-					JSONObject from = new JSONObject() ;
-					from.put("name", c.getDepartureId()) ;
-					from.put("stopSequence", 0) ;
-					leg.put("from", from) ;
-					leg.put("startTime", c.getDepartureTime()) ;
-					leg.put("departureDelay", 0) ;
+					JSONObject to = new JSONObject() ;
+					to.put("name", c.getArrivalName()) ;
+					to.put("stopId", c.getArrivalId()) ;
+					to.put("stopSequence", c.getArrivalSequence()) ;
+					leg.put("to", to) ;
+					leg.put("endTime", c.getArrivalTime()) ;
+					leg.put("arrivalDelay", c.getArrivalDelay()) ;
+					leg.put("distance", 0) ;
 					leg.put("mode", "TRANSIT") ;
 					leg.put("routeId", c.getRouteId()) ;
 					leg.put("agencyId", "") ;
@@ -182,18 +187,25 @@ public class Router {
 			}
 		}
 		
+		if (leg != null) {
+			/* Add the current leg corresponding to transit path */
+			JSONObject from = new JSONObject() ;
+			from.put("name", c_prev.getDepartureName()) ;
+			from.put("stopId", c_prev.getDepartureId()) ;
+			from.put("stopSequence", c_prev.getDepartureSequence()) ;
+			leg.put("from", from) ;
+			leg.put("startTime", c_prev.getDepartureTime()) ;
+			leg.put("departureDelay", c_prev.getDepartureDelay()) ;
+			legs.add(leg) ;
+		}
+		
+		Collections.reverse(legs) ;
 		itinerary.put("legs", legs) ;
 		itineraries.add(itinerary) ;
 		plan.put("itineraries", itineraries) ;
 		obj.put("plan", plan) ;
 		
-		String json = obj.toString();
-		FileWriter writer = new FileWriter("RFSPlan.json");
-		writer.write(json);
-		writer.close();
-        LOG.info("Json created successfully !");  
-        
-        return json ;
+        return obj.toString();
 	}
 
 	private void printJourney() {

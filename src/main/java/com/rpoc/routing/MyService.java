@@ -1,5 +1,6 @@
 package com.rpoc.routing;
 
+import java.io.FileWriter;
 import java.io.IOException;
 
 import javax.ws.rs.GET;
@@ -44,7 +45,13 @@ public class MyService {
 			router.run_CSA();
 
 			try {
-				return router.journey2Json();
+				String json = router.journey2Json() ;
+				if (App.DEBUG) {
+		        	FileWriter writer = new FileWriter("DEBUG.json");
+		    		writer.write(json);
+		    		writer.close();
+				}
+				return json;
 			} catch (IOException | JSONException e) {
 				e.printStackTrace();
 			}

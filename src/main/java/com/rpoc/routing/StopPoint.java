@@ -13,7 +13,7 @@ public class StopPoint implements Serializable {
 	private int minimum_connection_time ;
 
 	private Segment c ;	
-	private int arrival_time ;
+	private long arrival_time ;
 	public boolean marked = false ;
 	
 	public StopPoint (String stop_id, int minimum_connection_time) {
@@ -31,7 +31,7 @@ public class StopPoint implements Serializable {
 		return minimum_connection_time ;
 	}
 	
-	public int getArrivalTime () {
+	public long getArrivalTime () {
 		return arrival_time ;
 	}
 
@@ -39,7 +39,7 @@ public class StopPoint implements Serializable {
 		return c ;
 	}
 	
-	public boolean setArrivalTime (int time, Segment c) {
+	public boolean setArrivalTime (long time, Segment c) {
 		if (arrival_time > 0 && time > arrival_time) {
 			return false ;
 		}
